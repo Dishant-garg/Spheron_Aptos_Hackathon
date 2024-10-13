@@ -4,9 +4,12 @@
 /node_modules
 /.pnp
 .pnp.js
+/src/.env
 
 # testing
 /coverage
+.env
+src/env.tsx
 
 # production
 /build
