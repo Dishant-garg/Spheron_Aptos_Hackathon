@@ -160,11 +160,11 @@ function App() {
     if (!aiPrompt) return;
 
     try {
-        const genAI = new GoogleGenerativeAI("...your api key...");
+        const genAI = new GoogleGenerativeAI("AIzaSyBNO9xOo6VkKBf0XfV9MiUSXgyUWeU_juI");
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // const result = await model.generateContent(aiPrompt);
-      const result = await model.generateContent("You are a todo-list recommendation agen, give a todo list for the given prompt with some details , the prompt is : "+aiPrompt);
+      const result = await model.generateContent("You are a todo-list recommendation agen, give a todo list with numeric indexing for the given prompt  : "+aiPrompt);
 
         const aiGeneratedMarkdown = result.response.text(); // Get the markdown response from AI
 
