@@ -5,6 +5,7 @@ import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { useWallet, InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import Spline from '@splinetool/react-spline';
 
 // Import the Google Generative AI
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -193,8 +194,15 @@ function App() {
     fetchList();
   }, [account?.address]);
 
+
   return (
     <>
+      <div style={{position: "absolute"}}>
+          <Spline
+            // className="h-[100vh] w-full"
+            scene="https://prod.spline.design/72wW6LDRFJojJvLT/scene.splinecode" 
+          />
+        </div>
       <Layout>
         <Row align="middle" style={{ paddingTop: "25px", paddingBottom: "25px" }}>
           <Col span={10} offset={2}>
@@ -240,7 +248,7 @@ function App() {
         )}
 
         {/* List tasks */}
-        <Row>
+        {/* <Row>
           <Col span={16} offset={4}>
             <List
               bordered
@@ -266,7 +274,41 @@ function App() {
               )}
             />
           </Col>
-        </Row>
+        </Row> */}
+        <Row>
+  <Col span={16} offset={4}>
+    <List
+      bordered
+      header={<div>List of Tasks</div>}
+      dataSource={tasks}
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.6)', // semi-transparent background
+        backdropFilter: 'blur(10px)', // blur effect
+        borderRadius: '10px', // rounded corners for aesthetic
+        padding: '10px', // padding for spacing
+      }}
+      renderItem={(task) => (
+        <List.Item key={task.task_id}>
+          <Checkbox
+            disabled={task.completed}
+            checked={task.completed}
+            onChange={(event) => onCheckboxChange(event, task.task_id)}
+          >
+            <span style={{ textDecoration: task.completed ? "line-through" : "none" }}>{task.content}</span>
+          </Checkbox>
+          <Button
+            onClick={() => handleCopy(task.content)}
+            type="link"
+            style={{ float: "right", marginLeft: "auto" }}
+          >
+            Copy
+          </Button>
+        </List.Item>
+      )}
+    />
+  </Col>
+</Row>
+
 
         {/* AI Task Generator */}
         <Row gutter={[0, 32]} style={{ marginTop: "4rem" }}>
