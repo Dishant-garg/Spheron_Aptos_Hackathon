@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Row, Col, Button, Spin, List, Checkbox, Input } from "antd";
+import { Layout, Row, Col, Button, Spin, List, Checkbox, Input, message } from "antd";
 import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { useWallet, InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
-import {marked} from 'marked'; // Import the marked library
-
 
 // Import the Google Generative AI
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 
 const aptosConfig = new AptosConfig({ network: Network.DEVNET });
 const aptos = new Aptos(aptosConfig);
@@ -21,8 +18,8 @@ function App() {
   const { account, signAndSubmitTransaction } = useWallet();
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
   const [newTask, setNewTask] = useState<string>("");
-  const [aiPrompt, setAIPrompt] = useState<string>(""); // For capturing AI prompt
-  const [aiTasks, setAITasks] = useState<string[]>([]); // To store AI-generated tasks
+  const [aiPrompt, setAIPrompt] = useState<string>(""); 
+  const [aiTasks, setAITasks] = useState<string[]>([]);
 
   type Task = {
     address: string;
@@ -163,31 +160,34 @@ function App() {
         const genAI = new GoogleGenerativeAI("AIzaSyBNO9xOo6VkKBf0XfV9MiUSXgyUWeU_juI");
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // const result = await model.generateContent(aiPrompt);
-      const result = await model.generateContent("You are a todo-list recommendation agen, give a todo list with numeric indexing for the given prompt  : "+aiPrompt);
+        const result = await model.generateContent("You are a todo-list recommendation agent, give a todo list with numeric indexing for the given prompt: "+aiPrompt);
 
-        const aiGeneratedMarkdown = result.response.text(); // Get the markdown response from AI
+        const aiGeneratedMarkdown = result.response.text(); 
 
-        // Remove basic markdown characters (bold, italic, etc.)
         const aiGeneratedText = aiGeneratedMarkdown
-            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
-            .replace(/\*(.*?)\*/g, '$1')     // Remove italic formatting
-            .replace(/[-_*~`]/g, '');        // Remove other markdown symbols like lists, code blocks
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            .replace(/\*(.*?)\*/g, '$1')    
+            .replace(/[-_*~`]/g, '');        
 
-        // Assuming the response is a list of tasks separated by new lines or commas, split and store it in state
         const generatedTasks: string[] = aiGeneratedText
             .split('\n')
-            .map((task: string) => task.trim()) // Explicitly declare 'task' as string
-            .filter((task: string) => task.length > 0); // Ensure the task is not empty
+            .map((task: string) => task.trim()) 
+            .filter((task: string) => task.length > 0);
 
-        setAITasks(generatedTasks); // Store AI-generated tasks
+        setAITasks(generatedTasks); 
     } catch (error: any) {
         console.log("AI error:", error);
     }
-};
+  };
 
-
-
+  const handleCopy = async (taskContent: string) => {
+    try {
+      await navigator.clipboard.writeText(taskContent);
+      message.success("Task copied to clipboard!");
+    } catch (error) {
+      message.error("Failed to copy task.");
+    }
+  };
 
   useEffect(() => {
     fetchList();
@@ -198,7 +198,7 @@ function App() {
       <Layout>
         <Row align="middle" style={{ paddingTop: "25px", paddingBottom: "25px" }}>
           <Col span={10} offset={2}>
-            <h1 style={{ fontFamily: 'monospace', textDecoration: 'underline' }}>AI Todolist</h1>
+            <h1 style={{ fontFamily: 'monospace', textDecoration: 'underline' , fontSize:"25px"}}>AI Based Task Management System</h1>
           </Col>
           <Col span={12} style={{ textAlign: "right", paddingRight: "200px" }}>
             <WalletSelector />
@@ -236,75 +236,79 @@ function App() {
                 </Button>
               </Input.Group>
             </Col>
-            <Col span={8} offset={8}>
-              {tasks && (
-                <List
-                  size="small"
-                  bordered
-                  dataSource={tasks}
-                  renderItem={(task: any) => (
-                    <List.Item
-                      actions={[
-                        <div>
-                          {task.completed ? <Checkbox defaultChecked={true} disabled /> : <Checkbox onChange={(event) => onCheckboxChange(event, task.task_id)} />}
-                        </div>,
-                      ]}
-                    >
-                      <List.Item.Meta
-                        title={task.content}
-                        description={
-                          <a
-                            href={`https://explorer.aptoslabs.com/account/${task.address}/`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >{`${task.address.slice(0, 6)}...${task.address.slice(-5)}`}</a>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              )}
-            </Col>
           </Row>
         )}
-      </Spin>
 
-      {/* Section for AI to-do list generation */}
-      <Row gutter={[0, 32]} style={{ marginTop: "2rem" }}>
-        <Col span={8} offset={8}>
-          <h2 style={{ textAlign: 'center' }}>AI Generated TODO</h2> {/* Added Heading */}
-          <Input.Group compact style={{ display: 'flex', justifyContent: 'center' }}>
-            <Input
-              onChange={onAIPromptChange}
-              style={{ width: "calc(100% - 60px)" }}
-              placeholder="What do you want to achieve today?!"
-              size="large"
-              value={aiPrompt}
-            />
-            <Button onClick={onAIprompt} type="primary" style={{ height: "40px", backgroundColor: "#3f67ff", marginLeft: '10px' }}>
-              Generate
-            </Button>
-          </Input.Group>
-        </Col>
-      </Row>
-
-      {/* Display the AI-generated tasks */}
-      {aiTasks.length > 0 && (
-        <Row gutter={[0, 32]} style={{ marginTop: "2rem" }}>
-          <Col span={8} offset={8}>
+        {/* List tasks */}
+        <Row>
+          <Col span={16} offset={4}>
             <List
-              size="small"
               bordered
-              dataSource={aiTasks}
-              renderItem={(task: string) => (
-                <List.Item>
-                  <List.Item.Meta title={task} />
+              header={<div>List of Tasks</div>}
+              dataSource={tasks}
+              renderItem={(task) => (
+                <List.Item key={task.task_id}>
+                  <Checkbox
+                    disabled={task.completed}
+                    checked={task.completed}
+                    onChange={(event) => onCheckboxChange(event, task.task_id)}
+                  >
+                    <span style={{ textDecoration: task.completed ? "line-through" : "none" }}>{task.content}</span>
+                  </Checkbox>
+                  <Button
+                    onClick={() => handleCopy(task.content)}
+                    type="link"
+                    style={{ float: "right", marginLeft: "auto" }}
+                  >
+                    Copy
+                  </Button>
                 </List.Item>
               )}
             />
           </Col>
         </Row>
-      )}
+
+        {/* AI Task Generator */}
+        <Row gutter={[0, 32]} style={{ marginTop: "4rem" }}>
+          <Col span={16} offset={4}>
+            <h2 style={{ fontSize: "20px", fontFamily: 'monospace', textDecoration: 'underline' }}>
+              Generate AI Tasks
+            </h2>
+            <Input.Group compact style={{ display: 'flex', justifyContent: 'center' }}>
+              <Input
+                onChange={onAIPromptChange}
+                style={{ width: "calc(100% - 60px)" }}
+                placeholder="What do you want to achieve today?"
+                size="large"
+              />
+              <Button onClick={onAIprompt} type="primary" style={{ height: "40px", backgroundColor: "#3f67ff" }}>
+                Generate
+              </Button>
+            </Input.Group>
+          </Col>
+        </Row>
+
+        {/* Generated AI Tasks */}
+        {aiTasks.length > 0 && (
+          <Row>
+            <Col span={16} offset={4}>
+              <List
+                bordered
+                header={<div>Generated AI Tasks</div>}
+                dataSource={aiTasks}
+                renderItem={(task, index) => (
+                  <List.Item key={index}>
+                    <span>{task}</span>
+                    <Button onClick={() => handleCopy(task)} type="link" style={{ float: "right", marginLeft: "auto" }}>
+                      Copy
+                    </Button>
+                  </List.Item>
+                )}
+              />
+            </Col>
+          </Row>
+        )}
+      </Spin>
     </>
   );
 }
